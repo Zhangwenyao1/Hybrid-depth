@@ -1,7 +1,7 @@
 # Hybrid-depth
 <h3 align="center" style="font-size:48px; font-weight:bold; color:#9C276A; margin: 0;">
   <a href="https://openaccess.thecvf.com/content/ICCV2025/papers/Zhang_Hybrid-grained_Feature_Aggregation_with_Coarse-to-fine_Language_Guidance_for_Self-supervised_Monocular_ICCV_2025_paper.pdf" style="color:#9C276A; text-decoration: none;">
-    Hybrid-grained Feature Aggregation with Coarse-to-fine Language Guidance for Self-supervised Monocular Depth Estimation 
+    Hybrid-grained Feature Aggregation with Coarse-to-fine Language Guidance <br>  for Self-supervised Monocular Depth Estimation 
   </a>
 </h3>
 <p align="center">
