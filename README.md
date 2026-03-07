@@ -1,8 +1,29 @@
-# Hybrid-depth
+<div align="center">
 
-Monocular depth estimation with DINO/CLIP-driven representations.
+<h3 align="center" style="font-size:24px; font-weight:bold; color:#9C276A; margin: 0;">
+  <a href="https://openaccess.thecvf.com/content/ICCV2025/papers/Zhang_Hybrid-grained_Feature_Aggregation_with_Coarse-to-fine_Language_Guidance_for_Self-supervised_Monocular_ICCV_2025_paper.pdf" style="color:#9C276A; text-decoration: none;">
+    Hybrid-grained Feature Aggregation with Coarse-to-fine Language Guidance <br> for Self-supervised Monocular Depth Estimation
+  </a>
+</h3>
 
-⭐ If this project helps you, please give us a star on GitHub!
+<p align="center">
+  ICCV 2025
+</p>
+
+<p align="center">
+  ⭐ If our project helps you, please give us a star on GitHub to support us!
+</p>
+
+<div align="center">
+  <a href="https://openaccess.thecvf.com/content/ICCV2025/papers/Zhang_Hybrid-grained_Feature_Aggregation_with_Coarse-to-fine_Language_Guidance_for_Self-supervised_Monocular_ICCV_2025_paper.pdf">
+    <img src="https://img.shields.io/badge/Paper-PDF-orange.svg" alt="Paper PDF">
+  </a>
+  <a href="https://github.com/Zhangwenyao1/Hybrid-depth">
+    <img src="https://img.shields.io/badge/Code-GitHub-blue.svg" alt="Code">
+  </a>
+</div>
+
+</div>
 
 If you have any questions about the code, feel free to open an issue.
 
@@ -115,13 +136,13 @@ We thank the authors of [Monodepth2](https://github.com/nianticlabs/monodepth2),
 
 ## Citation
 
-If you use this code in your work, please cite:
+If you use this code in your work, please cite our ICCV 2025 paper:
 
 ```bibtex
-@misc{hybriddepth,
-  author = {Zhangwenyao},
-  title  = {Hybrid-depth: Monocular Depth Estimation with DINO/CLIP},
-  year   = {2025},
-  url    = {https://github.com/Zhangwenyao1/Hybrid-depth}
+@inproceedings{zhang2025hybriddepth,
+  title     = {Hybrid-grained Feature Aggregation with Coarse-to-fine Language Guidance for Self-supervised Monocular Depth Estimation},
+  author    = {Zhang, Wenyao and Liu, Hongsi and Li, Bohan and He, Jiawei and Qi, Zekun and Wang, Yunnan and Zhao, Shengyang and Yu, Xinqiang and Zeng, Wenjun and Jin, Xin},
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  year      = {2025}
 }
 ```
