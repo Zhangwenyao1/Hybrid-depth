@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "main",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "args": ["-c", "params/basicParams_freeze_dino_clip_nodepth.yaml", "--debug"], //,"-v" // "args": ["--c", "/code/occ/PromptLearningCLIP-MDE/params/depthclip_kitti_rn50_ls4o4d_d7_p_dset-even-7.yaml"], //,"-v"
+            "console": "integratedTerminal",
+            "justMyCode": false
+        },
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["--use_cfmde", "--backbone_model", "dino_clip", "--debug", "--use_dpt_teacher", "--use_depth_text_align", "--cat_depth_text_logic"],//"--stage1_checkpoint_path", "/model/ericliu/CFMDE-pretrained/epoch=19.ckpt"],//, "--pose_model_type", "dino_cls_token"],
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Current File2",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": ["--debug"],//, "--pose_model_type", "dino_cls_token"],
+            "justMyCode": true
+        },
+        {
+            "name": "Eval manydepth",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "cwd": "${workspaceFolder}/manydepth/manydepth",
+            "console": "integratedTerminal",
+            "args": ["--data_path", "/data/ericliu/KITTI-depth/kitti_dataset_copy/raw", "--load_weights_folder", "/code/CFMDE-main/manydepth/manydepth/exps/clip_resnet_dec/models/weights_19", "--eval_mono",  "--backbone_model", "clip", "--use_resnet_decoder", "--use_cfmde"],//, "--pose_model_type", "dino_cls_token"],
+            "justMyCode": true
+        }
+    ]
+}

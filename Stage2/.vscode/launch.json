@@ -1,0 +1,29 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Python File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "args": [
+                        "--model_name","fronzen_text",
+                        "--cat_depth_text_logic"],
+                        // "--use_depth_text_align",
+        },
+    {
+        // python evaluate_depth.py --cat_depth_text_logic  --load_weights_folder exps/frozen_textencoder_traindino_len256/models/weights_6/ --eval_mono --use_depth_text_align  --n_depth_text_tokens 256
+        "name": "vis",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "args": [
+                    "--cat_depth_text_logic","--load_weights_folder",
+                    "exps/frozen_textencoder_traindino_len256/models/weights_6/",
+                    "--eval_mono", "--use_depth_text_align", "--n_depth_text_tokens", "256", "--vis_dir", "vis_ours", "--batch_size", "1"],
+    },
+    ]
+}

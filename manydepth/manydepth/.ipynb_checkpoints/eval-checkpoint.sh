@@ -1,0 +1,1 @@
+python evaluate_depth.py --eval_all --eval_mono --load_weights_folder /code/CFMDE-main/manydepth/manydepth/exps/dinoclip_dptteacher_lowlr_fixed2/models --use_cfmde --backbone_model dino_clip >> /code/CFMDE-main/manydepth/manydepth/exps/dinoclip_dptteacher_lowlr_fixed2/eval_log.txt

@@ -1,0 +1,3 @@
+wandb/
+manydepth/exps/
+**/__pycache__/**

@@ -1,0 +1,234 @@
+# DepthCLIP.py
+# Based heavily on DepthCLIP from "Can Language Understand Depth?", Zhang et al., 2022, in ACM Multimedia 2022
+# The general idea is to align depth-related language and image features using a pretrained CLIP model.
+# This implementation does not exactly follow that in the paper, and also contains various modifications and experiments.
+
+from collections import namedtuple, OrderedDict
+import math
+import os, sys
+from typing import List, Tuple
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import torchvision
+import re
+from layers import *
+from CLIP import clip
+import pytorch_lightning as pl
+import sys
+from modules.LearnableTokenEmbeddings import LearnableTokenEmbeddings
+from omegaconf import OmegaConf
+import numpy as np
+
+
+
+class depthclippose(nn.Module):
+    """
+    A semi-faithful implementation of DepthCLIP, with various modifications.
+    Based heavily on DepthCLIP from "Can Language Understand Depth?", Zhang et al., 2022, in ACM Multimedia 2022.
+    The general idea is to align depth-related language and image features using a pretrained CLIP model.
+    This implementation does not exactly follow that in the paper, and also contains various modifications and experiments.
+    """
+    def __init__(self, args):
+        super().__init__()
+        # self.args = args.config_file
+        self.scales = args.scales
+        self.args = OmegaConf.load('/code/depth_estimation/monodepth2/basicParams_vit.yaml')
+        self.args = self.args
+        args = self.args
+        self._encoder_params_module_list = []
+        self._non_encoder_params_module_list = []
+        self._frozen_params_module_list = []
+        self._zero_params_module_list = []  # Used for CLIP. Requires_grad=True but not passed to optimizer, so shouldn't update...
+        
+        self._extra_learnable_params_list = []  # Temporary holding place for learnable tokens. If self.args.depthclip.freeze_depthclip is True, these will be frozen. Else they will be learnable.
+    
+
+        self.temperature = 0.1
+
+        self.relu = nn.ReLU()
+        self.sigmoid = nn.Sigmoid()
+
+        # self.fcaxisangle = nn.Linear(120, 3, bias=True)
+        # self.fctranslation = nn.Linear(120, 3, bias=True)
+        self.conv_axisangle = nn.Conv2d(4096, 1024, 1)
+        self.conv_translation = nn.Conv2d(4096, 1024, 1)
+
+        # Decoder
+        self.num_output_channels = 1
+        self.use_skips = False 
+        self.upsample_mode = 'bilinear'
+        self.scales = [0]
+
+        
+        
+        self.lenth = 16
+ 
+
+        # Posedecoder
+        
+
+
+        self.num_frames_to_predict_for = 1
+
+        self.pose_convs = OrderedDict()
+        # self.pose_convs[("squeeze")] = nn.Conv2d(4096, 256, 1)
+        # self.pose_convs[("pose", 0)] = nn.Conv2d(self.lenth, 256, 3, 1, 1)
+        # self.pose_convs[("pose", 1)] = nn.Conv2d(256, 256, 3, 1, 1)
+        # self.pose_convs[("pose", 2)] = nn.Conv2d(256, 6 * self.num_frames_to_predict_for, 1)
+    
+
+        self.num_ch_enc = np.array([self.lenth, self.lenth, self.lenth, self.lenth, self.lenth])
+        # self.num_ch_dec = np.array([16, 64, 256, 512, 1024])
+        self.num_ch_dec = np.array([16, 32, 64, 128, 256])
+
+        for i in range(4, -1, -1):
+            # upconv_0
+            num_ch_in = self.num_ch_enc[-1] if i == 4 else self.num_ch_dec[i + 1]
+            num_ch_out = self.num_ch_dec[i]
+            self.pose_convs[("pose_convs", i, 0)] = ConvBlock(num_ch_in, num_ch_out).cuda()
+            
+            
+            # upconv_1
+            num_ch_in = self.num_ch_dec[i]
+            if self.use_skips and i > 0:
+                num_ch_in += self.num_ch_enc[i - 1]
+            num_ch_out = self.num_ch_dec[i]
+            self.pose_convs[("pose_convs", i, 1)] = ConvBlock(num_ch_in, num_ch_out).cuda()
+ 
+        self.pose_convs[("pose_convs", 2)] = nn.Conv2d(16, 6 * self.num_frames_to_predict_for, 1)
+        self.axisangle_net = nn.ModuleList(list(self.pose_convs.values()))
+        # self.translation_convs = OrderedDict()
+        # self.translation_convs[("pose", 0)] = nn.Conv2d(1, 4, 3, 1, 1)
+        # self.translation_convs[("pose", 1)] = nn.Conv2d(4, 16, 3, 1, 1)
+        # self.translation_convs[("pose", 2)] = nn.Conv2d(16, 3 * self.num_frames_to_predict_for, 1)
+        # self.translation_net = nn.ModuleList(list(self.translation_convs.values()))
+               
+
+                        
+        if "RN" in self.args.depthclip.clip:
+            img_f_agg_dims = 2048
+        elif "ViT" in self.args.depthclip.clip:
+            img_f_agg_dims = 512
+        else:
+            sys.exit("Error in DepthCLIP init: img_f_agg_dims unknown for this CLIP architecture.")
+
+
+
+
+
+
+        # Sanity checking
+
+
+
+        # Initialise the output stages:
+        # Arch modifies three parts:
+        #   1. Img features, before text correlation
+        #   2. Bin probabilities (after text correlation)
+        #   3. Depth map output
+
+        # What to do to the image features after they're generated by CLIP.
+
+
+
+
+
+
+        # Sanity checking - all three must exist, even if they're just nn.Identity()s
+
+        
+        # Initialise CLIP
+        # self.clip, self.clip_preprocess = clip.load(self.args.depthclip.clip, device="cpu")
+        
+        # Optionally, load a checkpoint.
+        if self.args.depthclip.get("start_from_checkpoint"):
+            ckpt_path = self.args.depthclip.get("start_from_checkpoint")
+            tmp = torch.load(os.path.expanduser(ckpt_path))
+            pattern = re.compile("model.*")
+            # Overwrite weight names to work from here (they're saved from a level up)
+            tmp_state_dict = {re.sub(r"model\.", "", k): v for k, v in tmp["state_dict"].items() if pattern.match(k)}
+            # extra_tkns_learnables used to be nn.Embeddings, now they're just nn.Parameters. This allows loading of the old embeddings checkpoints.
+            tmp_state_dict = {re.sub(r"\.embeddings\.weight", "", k) if re.compile("extra_tkns_learnables_.*\.embeddings\.weight").match(k) else k: v for k, v in tmp_state_dict.items()}
+
+            if self.args.depthclip.get("load_clip_from_checkpoint") is False:
+                # Filter all CLIP values from the state dict
+                tmp_state_dict = {k: v for k, v in tmp_state_dict.items() if re.compile("(?!^clip.*)").match(k)}
+                
+
+            self.load_state_dict(tmp_state_dict, strict=False)
+
+
+
+
+        # Build templates (word-level). Doesn't handle img_f substitution.
+    
+
+
+        # Convert all tokens to integer indices. New (out-of-vocab) tokens will have large nonzero values and will be in extra_tkns_reverse_lookup.
+        # These get reused, so they're initialised here.
+        
+        
+
+
+
+
+
+
+    def forward(self, input_features, axisangle, translation):
+
+        last_features = [f[-1] for f in input_features]
+
+        cat_features = [f/f.norm(dim=1, keepdim=True) for f in last_features]
+        # cat_features = [f for f in last_features]
+        axisangle_cat_features = torch.cat(cat_features, dim=1)
+    
+        axisangle_txt_f = axisangle['axisangle_txt_f'] 
+        
+        dic_feature = []
+        align_feature = []
+        # 对每个feature 都进行concat
+        for i in range(len(input_features[0])):
+            h, w = input_features[0][i].shape[2], input_features[0][i].shape[3]
+            cat_features = [input_features[0][i]/input_features[0][i].norm(dim=1, keepdim=True), input_features[1][i]/input_features[1][i].norm(dim=1, keepdim=True)]
+            pose_cat_features = torch.cat(cat_features, dim=1)
+            pose_cat_features = pose_cat_features.reshape(pose_cat_features.shape[0], pose_cat_features.shape[1], -1).permute(0, 2, 1)
+            axisangle = F.interpolate(pose_cat_features, size=axisangle_txt_f.shape[0])        
+            axisangle_logits = 100.0 * (axisangle @ axisangle_txt_f) 
+            axisangle_logits = axisangle_logits.permute(0, 2, 1).reshape(axisangle_logits.shape[0], self.lenth, h, w)
+            align_feature.append(axisangle_logits)
+        
+
+        x = align_feature[-1]
+        for i in range(4, -1, -1):
+            x = self.pose_convs[("pose_convs", i, 0)](x)
+            x = [upsample(x)]
+            if self.use_skips and i > 0:
+                if x[0].shape[-1]==align_feature[i - 1].shape[-1]:
+                    x += [align_feature[i - 1]]
+                else: 
+                    x += [upsample(align_feature[i - 1])]
+            x = torch.cat(x, 1)
+            x = self.pose_convs[("pose_convs", i, 1)](x)
+            if i in self.scales:
+                out = self.pose_convs[("pose_convs", 2)](x)
+                
+        out = out.mean(3).mean(2)
+        out = 0.01 * out.view(-1, 1, 1, 6)        
+        
+        # axisangle = 0.5 * out[..., :3] + 0.5 * axisangle_pred
+        # translation = 0.5 * out[..., 3:] + 0.5 * translation_pred    
+        
+        axisangle =out[..., :3]
+        translation =out[..., 3:]
+        
+        
+        
+        
+        # 
+
+
+
+        return axisangle, translation
+        # return outputs, features, axisangle, translation
+        # return outputs, axisangle, translation
