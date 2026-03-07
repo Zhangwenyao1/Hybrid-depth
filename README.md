@@ -1,30 +1,127 @@
-# PromptLearningCLIP
-This folder contains the code for the paper "Learning to Prompt CLIP for Monocular Depth Estimation: Exploring the Limits of Human Language", Dylan Auty and Krystian Mikolajczyk, ICCV Workshop on Open Vocabulary Scene Understanding (OpenSUN3D) 2023.
+# Hybrid-depth
 
-## Installation
-Create a new conda environment from `conda_environment_files/environment.yaml`. Activate it with `conda activate promptlearningclip`.
+Monocular depth estimation with DINO/CLIP-driven representations.
 
-## Params files
-Params are handled using OmegaConf, and defined via yaml files. The most up-to-date set of parameters and descriptive comments for them can be found in `params/basicParams.yaml`, which is used during development. To define a new experiment, please refer to that file for instructions on what each of the parameters do.
+⭐ If this project helps you, please give us a star on GitHub!
 
-## Datasets
-Preparation of datasets should be done following [the official BTS repo](https://github.com/cleinc/bts) and the Pytorch-specific instructions linked within there.
+If you have any questions about the code, feel free to open an issue.
 
-All datasets are assumed to be located in `./data`, e.g. `./data/nyu` or `./data/kitti`. This can be changed in the parameter yaml file if needed.
+---
 
-## Training
-Define a new parameter file, then run:
-```python
-python main.py -c /path/to/params/file.yaml
+## Clone this repo
+
+```bash
+git clone https://github.com/Zhangwenyao1/Hybrid-depth.git
+cd Hybrid-depth
 ```
 
-Results are written to `./runs` by default, and are in Tensorboard format.
+This repository builds on [Monodepth2](https://github.com/nianticlabs/monodepth2) and [ManyDepth](https://github.com/nianticlabs/manydepth).
 
-For debugging (0 workers for dataloader, running on only one GPU, small number of iterations for both training and testing), the `--debug` command line flag can be optionally added.
+---
 
-## Validation
-Use the `-v` flag. Specify either the params file or the automatically-saved `hparams.yaml`:
-1. Using regular params file: code will attempt to find the most recently-modified file called `last.ckpt` in the run directory corresponding to the name of the params file (or `args.basic.name` if set in the params file). This is normally fine, but if there are multiple versions of the experiment (i.e. `run_name/version_0`, `run_name/version_1` etc.) then this may not behave as expected.
-2. Using auto-saved `hparams.yaml`: Will find the most recently-modified checkpoint called `last.ckpt` within the same directory that the `hparams.yaml` file is located in. File **must** be named `hparams.yaml` for this to work.
+## Installation
 
-Validation mode runs on only one device, with a batch size of 1. It will save a file called `validation_output.txt` in the run directory, containing two sets of metrics: the image-wise running average, following the formulation used in BTS and AdaBins implementations, and the pixelwise total average across the entire validation set. The former is what is reported in the paper, to facilitate comparison with other methods in the literature.
+- Python 3.8+
+- PyTorch (with CUDA if training)
+- Create a conda environment and install dependencies, e.g.:
+
+```bash
+conda create -n hybrid_depth python=3.8
+conda activate hybrid_depth
+pip install torch torchvision
+pip install -r requirements.txt  # if present, or install as needed
+```
+
+---
+
+## Datasets
+
+- **KITTI**: Prepare the raw dataset as in [Monodepth2](https://github.com/nianticlabs/monodepth2). Set `--data_path` to your KITTI raw root (e.g. `.../kitti_dataset_copy/raw`).
+- **NYU Depth v2**: Set `--dataset nyu` and point `--data_path` to your NYU path.
+
+Splits used in this repo: `eigen_zhou`, `eigen_full`, `benchmark`, `odom`, `nyu` (see `Stage2/splits/` and `Stage2/options.py`).
+
+---
+
+## Training
+
+### Stage2 (Monodepth2-style with DINO/CLIP)
+
+```bash
+cd Stage2
+python train.py \
+  --data_path /path/to/kitti/raw \
+  --log_dir /path/to/logs \
+  --model_name your_exp_name \
+  --split eigen_zhou \
+  --dataset kitti \
+  --height 224 --width 672
+```
+
+Main options (see `Stage2/options.py`): `--depth_model_type`, `--pose_model_type`, `--only_dino` / `--only_clip`, `--use_depth_text_align`, etc.
+
+### ManyDepth (multi-frame)
+
+```bash
+cd manydepth/manydepth
+python train.py \
+  --data_path /path/to/kitti/raw \
+  --log_dir /path/to/logs \
+  --model_name your_exp_name
+```
+
+---
+
+## Evaluation
+
+### KITTI depth (Stage2)
+
+```bash
+cd Stage2
+python evaluate_depth.py \
+  --load_weights_folder /path/to/weights \
+  --eval_split eigen \
+  --eval_mono
+```
+
+For full benchmark evaluation, use `--eval_split benchmark` and the corresponding split files.
+
+### Single-image inference (Stage2)
+
+```bash
+cd Stage2
+python test_simple.py --image_path /path/to/image --model_path /path/to/weights
+```
+
+---
+
+## Project structure (main parts)
+
+| Path | Description |
+|------|-------------|
+| `Stage2/` | Monodepth2-style training & evaluation (DINO/CLIP encoder, depth decoder) |
+| `manydepth/` | ManyDepth multi-frame training & evaluation |
+| `modules/` | Shared modules (e.g. DepthCLIP, MainRunnerLM) |
+| `datasets/` | Data loaders and split files |
+| `params/` | YAML configs for `main.py` (optional pipeline) |
+
+---
+
+## Acknowledgement
+
+We thank the authors of [Monodepth2](https://github.com/nianticlabs/monodepth2), [ManyDepth](https://github.com/nianticlabs/manydepth), and [CLIP](https://github.com/openai/CLIP) for their open-source code and models.
+
+---
+
+## Citation
+
+If you use this code in your work, please cite:
+
+```bibtex
+@misc{hybriddepth,
+  author = {Zhangwenyao},
+  title  = {Hybrid-depth: Monocular Depth Estimation with DINO/CLIP},
+  year   = {2025},
+  url    = {https://github.com/Zhangwenyao1/Hybrid-depth}
+}
+```
