@@ -72,8 +72,6 @@ You can also set the path via the `DINOV2_PRETRAIN_PATH` environment variable.
 
 **CLIP**  
 The code uses CLIP **RN50**. Place `RN50.pt` in `checkpoints/` (or it will be downloaded there on first run).
-
-- Official: <https://openaipublic.azureedge.net/clip/models/afeb0e10f9e5a86da6080e35cf09123aca3b358a0c3e3b6c78a7b63bc04b6762/RN50.pt>
 - Hugging Face: <https://huggingface.co/jinaai/clip-models/blob/main/RN50.pt>
 
 **Our model weights (Hugging Face: [WenyaoZhang/Hybrid-depth](https://huggingface.co/WenyaoZhang/Hybrid-depth))**
@@ -83,7 +81,6 @@ The code uses CLIP **RN50**. Place `RN50.pt` in `checkpoints/` (or it will be do
 | **Stage2 (paper)** | `checkpoints/` | Download this folder and set `--load_weights_folder` to it for evaluation or single-image inference. |
 | **Stage1 pretrained** | `stage1_checkpoint/stage1.ckpt` | Download this file and set `--stage1_checkpoint_path` to it when training Stage2 (if you do not train Stage1 yourself). |
 
-For faster download in some regions, you can set `export HF_ENDPOINT=https://hf-mirror.com` before using `huggingface-cli` or the Hub API.
 
 ---
 
