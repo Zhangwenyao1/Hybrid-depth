@@ -37,7 +37,10 @@ class depthdinoclipencoder(nn.Module):
         self.args = args
         self.use_resnet50_instead_clip = args.use_resnet50_instead_clip
         self.dinov2:nn.Module = torch.hub.load('/code/CFMDE-main/dinov2', 'dinov2_vitb14', source='local', verbose=True, pretrained=False)
-        self.dinov2.load_state_dict(torch.load('/model/ericliu/DINOv2/dinov2_vitb14_pretrain.pth'))
+        import os
+        _repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        _dinov2_path = os.environ.get('DINOV2_PRETRAIN_PATH', os.path.join(_repo_root, 'checkpoints', 'dinov2_vitb14_pretrain.pth'))
+        self.dinov2.load_state_dict(torch.load(_dinov2_path, map_location='cpu'))
         if self.use_resnet50_instead_clip:
             self.resnet50 = resnet50()
             if not args.resnet50_random_init:

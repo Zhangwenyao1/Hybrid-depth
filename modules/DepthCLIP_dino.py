@@ -443,8 +443,10 @@ class DepthCLIP(nn.Module):
 
         # Initialise CLIP
         self.clip, self.clip_preprocess = clip.load(self.args.depthclip.clip, device="cpu", download_root='checkpoints')
+        _repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        _dinov2_path = os.environ.get('DINOV2_PRETRAIN_PATH', os.path.join(_repo_root, 'checkpoints', 'dinov2_vitb14_pretrain.pth'))
         self.dinov2:nn.Module = torch.hub.load('dinov2', 'dinov2_vitb14', source='local', verbose=True, pretrained=False)
-        self.dinov2.load_state_dict(torch.load('/model/ericliu/DINOv2/dinov2_vitb14_pretrain.pth'))
+        self.dinov2.load_state_dict(torch.load(_dinov2_path, map_location='cpu'))
 
         # Optionally, load a checkpoint.
         if self.args.depthclip.get("start_from_checkpoint"):

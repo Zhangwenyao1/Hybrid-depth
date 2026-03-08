@@ -95,9 +95,11 @@ class DINOCLIPEncoderMatching(nn.Module):
         self.warp_depths = None
         self.depth_bins = None
 
-        self.dinov2:nn.Module = torch.hub.load('/code/CFMDE-main/dinov2', 'dinov2_vitb14', source='local', verbose=True, pretrained=False)
-        self.dinov2.load_state_dict(torch.load('/model/ericliu/DINOv2/dinov2_vitb14_pretrain.pth'))
-        self.clip, self.clip_preprocess = clip.load('RN50', device="cpu", download_root='/code/CFMDE-main/checkpoints')
+        _repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        _dinov2_path = os.environ.get('DINOV2_PRETRAIN_PATH', os.path.join(_repo_root, 'checkpoints', 'dinov2_vitb14_pretrain.pth'))
+        self.dinov2:nn.Module = torch.hub.load(os.path.join(_repo_root, 'dinov2'), 'dinov2_vitb14', source='local', verbose=True, pretrained=False)
+        self.dinov2.load_state_dict(torch.load(_dinov2_path, map_location='cpu'))
+        self.clip, self.clip_preprocess = clip.load('RN50', device="cpu", download_root=os.path.join(_repo_root, 'checkpoints'))
 
         #self.layer0_dino = self.dinov2.patch_embed
         self.layer0_dino = self.dinov2.prepare_tokens_with_masks

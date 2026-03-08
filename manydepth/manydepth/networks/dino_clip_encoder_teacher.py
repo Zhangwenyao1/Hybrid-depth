@@ -3,6 +3,7 @@
 # The general idea is to align depth-related language and image features using a pretrained CLIP model.
 # This implementation does not exactly follow that in the paper, and also contains various modifications and experiments.
 
+import os
 import torch
 import torch.nn as nn
 from torchvision.models.resnet import resnet50
@@ -36,8 +37,10 @@ class depthdinoclipencoder_teacher(nn.Module):
         super().__init__()
         self.args = args
         self.use_resnet50_instead_clip = args.use_resnet50_instead_clip
-        self.dinov2:nn.Module = torch.hub.load('/code/CFMDE-main/dinov2', 'dinov2_vitb14', source='local', verbose=True, pretrained=False)
-        self.dinov2.load_state_dict(torch.load('/model/ericliu/DINOv2/dinov2_vitb14_pretrain.pth'))
+        _repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        _dinov2_path = os.environ.get('DINOV2_PRETRAIN_PATH', os.path.join(_repo_root, 'checkpoints', 'dinov2_vitb14_pretrain.pth'))
+        self.dinov2:nn.Module = torch.hub.load(os.path.join(_repo_root, 'dinov2'), 'dinov2_vitb14', source='local', verbose=True, pretrained=False)
+        self.dinov2.load_state_dict(torch.load(_dinov2_path, map_location='cpu'))
         if self.use_resnet50_instead_clip:
             self.resnet50 = resnet50()
             if not args.resnet50_random_init:
@@ -46,7 +49,7 @@ class depthdinoclipencoder_teacher(nn.Module):
             del self.resnet50.avgpool
             del self.resnet50.fc
         else:
-            self.clip, self.clip_preprocess = clip.load('RN50', device="cpu", download_root='/code/CFMDE-main/checkpoints')
+            self.clip, self.clip_preprocess = clip.load('RN50', device="cpu", download_root=os.path.join(_repo_root, 'checkpoints'))
 
         clip_aligned_dim = 256
         # fuse clip and dino

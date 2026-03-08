@@ -58,6 +58,35 @@ pip install -r requirements.txt  # if present, or install as needed
 
 ---
 
+## Checkpoints
+
+All pretrained weights can live under the repo root’s **`checkpoints/`** folder. The following are required for training or evaluation.
+
+**DINOv2**  
+Download `dinov2_vitb14_pretrain.pth` and place it in `checkpoints/`.
+
+- Official: <https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_pretrain.pth>
+- Hugging Face: <https://huggingface.co/facebook/dinov2-base/tree/main> (download `dinov2_vitb14_pretrain.pth`)
+
+You can also set the path via the `DINOV2_PRETRAIN_PATH` environment variable.
+
+**CLIP**  
+The code uses CLIP **RN50**. Place `RN50.pt` in `checkpoints/` (or it will be downloaded there on first run).
+
+- Official: <https://openaipublic.azureedge.net/clip/models/afeb0e10f9e5a86da6080e35cf09123aca3b358a0c3e3b6c78a7b63bc04b6762/RN50.pt>
+- Hugging Face: <https://huggingface.co/jinaai/clip-models/blob/main/RN50.pt>
+
+**Our model weights (Hugging Face: [WenyaoZhang/Hybrid-depth](https://huggingface.co/WenyaoZhang/Hybrid-depth))**
+
+| Content | Path in repo | Usage |
+|--------|----------------|-------|
+| **Stage2 (paper)** | `checkpoints/` | Download this folder and set `--load_weights_folder` to it for evaluation or single-image inference. |
+| **Stage1 pretrained** | `stage1_checkpoint/stage1.ckpt` | Download this file and set `--stage1_checkpoint_path` to it when training Stage2 (if you do not train Stage1 yourself). |
+
+For faster download in some regions, you can set `export HF_ENDPOINT=https://hf-mirror.com` before using `huggingface-cli` or the Hub API.
+
+---
+
 ## Datasets
 
 - **KITTI**: Prepare the raw dataset as in [Monodepth2](https://github.com/nianticlabs/monodepth2). Set `--data_path` to your KITTI raw root (e.g. `.../kitti_dataset_copy/raw`).
@@ -69,30 +98,42 @@ Splits used in this repo: `eigen_zhou`, `eigen_full`, `benchmark`, `odom`, `nyu`
 
 ## Training
 
+The pipeline has two stages: **Stage1** trains the DINO+CLIP encoder with language–depth alignment (no depth regression); **Stage2** trains the full depth model (Monodepth2-style) using a Stage1 checkpoint. You can either train both stages or use our released Stage1 checkpoint and only train Stage2.
+
+### Stage1 (DINO + CLIP pretraining, PyTorch Lightning)
+
+Stage1 trains the DINO+CLIP encoder with language–depth alignment (no monocular depth regression). It uses PyTorch Lightning and a YAML config. The output is a `.ckpt` file that you pass to Stage2 as `--stage1_checkpoint_path`.
+
+```bash
+python main.py -c params/basicParams_dino_clip_nodepth.yaml
+```
+
+- Edit the config to set **`paths.data_dir`** (root for your dataset) and optionally **`paths.run_dir`** (where checkpoints and logs are saved). For KITTI/NYU, set **`basic.dataset`** (e.g. `kitti` or `nyu`) and ensure the dataset paths under `paths` / `kitti` / `nyu` in the YAML point to your data.
+- Checkpoints are saved under `paths.run_dir` (e.g. `./runs` or `/output`) in a subfolder named from the config; each run produces `.ckpt` files (e.g. `last.ckpt` or `epoch=19.ckpt`). Use one of these as the Stage1 pretrained checkpoint for Stage2.
+
+See `params/basicParams_dino_clip_nodepth.yaml` and other `params/*.yaml` for options (dataset, depth tokens, learning rate, etc.).
+
 ### Stage2 (Monodepth2-style with DINO/CLIP)
+
+Training with a Stage1 pretrained checkpoint and depth–text alignment (paper setup):
 
 ```bash
 cd Stage2
 python train.py \
+  --stage1_checkpoint_path /path/to/stage1_pretrained.ckpt \
+  --use_depth_text_align \
+  --cat_depth_text_logic \
+  --model_name dinoclip_textaligned_dpt_stage1_cat_2 \
   --data_path /path/to/kitti/raw \
   --log_dir /path/to/logs \
-  --model_name your_exp_name \
   --split eigen_zhou \
   --dataset kitti \
   --height 224 --width 672
 ```
 
-Main options (see `Stage2/options.py`): `--depth_model_type`, `--pose_model_type`, `--only_dino` / `--only_clip`, `--use_depth_text_align`, etc.
+Set `--stage1_checkpoint_path` to the path of your **Stage1 pretrained** checkpoint (`.ckpt`). If you did not train Stage1, download `stage1_checkpoint/stage1.ckpt` from [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth/tree/main) and point `--stage1_checkpoint_path` to it. Set `--data_path` and `--log_dir` as needed. See `Stage2/options.py` for more options.
 
-### ManyDepth (multi-frame)
 
-```bash
-cd manydepth/manydepth
-python train.py \
-  --data_path /path/to/kitti/raw \
-  --log_dir /path/to/logs \
-  --model_name your_exp_name
-```
 
 ---
 
@@ -100,7 +141,9 @@ python train.py \
 
 ### KITTI depth (Stage2)
 
-**Recommended setup (best config from the paper)**: use the following arguments with your downloaded or trained weights:
+To reproduce the paper results, download the **Stage2** checkpoint from [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth) (the `checkpoints` folder), place it locally, and run the following with `--load_weights_folder` pointing to that folder.
+
+**Recommended arguments (best config from the paper):**
 
 ```bash
 cd Stage2
@@ -111,8 +154,6 @@ python evaluate_depth.py \
   --use_depth_text_align \
   --n_depth_text_tokens 256
 ```
-
-**Checkpoint for paper results**: Weights that reproduce the results in the paper are available at [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth/tree/main). Download the checkpoint folder and set `--load_weights_folder` to its path.
 
 **`--eval_split`** selects which test set to use. Default is **`eigen`** if omitted. Common options:
 - **`eigen`** (default) — standard Eigen test set.
@@ -134,13 +175,13 @@ Run depth prediction on a single image and save a colormapped depth visualizatio
 cd Stage2
 python test_simple.py \
   --image_path /path/to/image.png \
-  --model_name /path/to/weights \
+  --model_name /path/to/weights_folder \
   --cat_depth_text_logic \
   --use_depth_text_align \
   --n_depth_text_tokens 256
 ```
 
-Use the same checkpoint as in [Evaluation](#evaluation) (e.g. from [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth/tree/main)). Outputs are written to the same directory as the input image by default, or set `--vis_dir` to specify an output folder.
+Use the same Stage2 weights folder as in [Evaluation](#kitti-depth-stage2) (e.g. the `checkpoints` folder from [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth)). Outputs are written to the same directory as the input image by default; set `--vis_dir` to specify an output folder.
 
 ---
 
@@ -148,11 +189,14 @@ Use the same checkpoint as in [Evaluation](#evaluation) (e.g. from [Hugging Face
 
 | Path | Description |
 |------|-------------|
-| `Stage2/` | Monodepth2-style training & evaluation (DINO/CLIP encoder, depth decoder) |
+| `Stage2/` | Monodepth2-style training & evaluation (DINO/CLIP encoder, depth decoder). Entry: `train.py`, `evaluate_depth.py`, `test_simple.py`. |
 | `manydepth/` | ManyDepth multi-frame training & evaluation |
+| `main.py` | Stage1 training entry (PyTorch Lightning); use with a config from `params/`. |
 | `modules/` | Shared modules (e.g. DepthCLIP, MainRunnerLM) |
+| `params/` | YAML configs for Stage1 (`main.py`); e.g. `basicParams_dino_clip_nodepth.yaml`. |
 | `datasets/` | Data loaders and split files |
-| `params/` | YAML configs for `main.py` (optional pipeline) |
+| `upload_stage1_ckpt_to_hf.py` | Upload Stage1 `.ckpt` to Hugging Face (`stage1_checkpoint/`). |
+| `Stage2/upload_weights_to_hf.py` | Upload Stage2 weights folder to Hugging Face (`checkpoints/`). |
 
 ---
 

@@ -9,8 +9,9 @@ Usage:
 from huggingface_hub import HfApi
 
 REPO_ID = "WenyaoZhang/Hybrid-depth"
-LOCAL_FOLDER = "exps/frozen_textencoder_traindino_len256/models/checkpoints"
-PATH_IN_REPO = "checkpoints"  # will appear as weights_6/depth.pth, etc. on HF
+# Stage2 best checkpoint (paper results): weights_6
+LOCAL_FOLDER = "exps/frozen_textencoder_traindino_len256/models/weights_6"
+PATH_IN_REPO = "stage2_checkpoints"  # uploaded as checkpoints/ on HF (encoder.pth, depth.pth, pose.pth, pose_encoder.pth)
 
 def main():
     api = HfApi()
