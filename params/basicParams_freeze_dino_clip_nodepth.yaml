@@ -155,7 +155,7 @@ adabins:
   # encoder_name: efficientnet-v2-m
 
 paths:  # Dataset-agnostic path information
-  data_dir: /data/zhangwenyao/drive_data      # Path to folder containing the nyu folder
+  data_dir: ./data      # Set to your data root; put TUSimple (from HF) under it
   #run_dir: ./runs       # Path to tensorboard run dir.
   run_dir: /output
 
@@ -226,9 +226,9 @@ tusimple:
   use_right: False
   min_depth: 0.001
   max_depth: 80
-  filenames_file_train: /data/zhangwenyao/drive_data/TUSimple/process_32_order/train_data/data_list/train.txt
-  filenames_file_eval: /data/zhangwenyao/drive_data/TUSimple/process_32_order/test_data/data_list/test.txt
-  base_path: TUSIMPLE
+  filenames_file_train: ./data/TUSimple/process_32_order/train_data/data_list/train.txt
+  filenames_file_eval: ./data/TUSimple/process_32_order/test_data/data_list/test.txt
+  base_path: TUSimple
 
 hardware:
   num_workers: 8        # For use by the dataloaders

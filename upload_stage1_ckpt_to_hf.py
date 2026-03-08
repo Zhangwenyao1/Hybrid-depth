@@ -14,8 +14,8 @@ from pathlib import Path
 from huggingface_hub import HfApi
 
 REPO_ID = "WenyaoZhang/Hybrid-depth"
-# Local path to your Stage1 pretrained checkpoint (.ckpt)
-LOCAL_CKPT_PATH = "/model/ericliu/CFMDE-pretrained/epoch=19.ckpt"
+# Local path to your Stage1 pretrained checkpoint (.ckpt). Change this before running.
+LOCAL_CKPT_PATH = "/path/to/your/stage1_pretrained.ckpt"
 PATH_IN_REPO = "stage1_checkpoint/stage1.ckpt"
 
 

@@ -91,6 +91,7 @@ For faster download in some regions, you can set `export HF_ENDPOINT=https://hf-
 
 - **KITTI**: Prepare the raw dataset as in [Monodepth2](https://github.com/nianticlabs/monodepth2). Set `--data_path` to your KITTI raw root (e.g. `.../kitti_dataset_copy/raw`).
 
+- **TuSimple (Stage1)**: Stage1 uses TuSimple lane data. On [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth) download **`tusimple/process_32_order.tar.gz`**, extract it, and place the `process_32_order` folder inside a directory named **`TUSimple`** in your data root (e.g. `./data/TUSimple/process_32_order/`). In the Stage1 YAML set **`paths.data_dir`** to that data root and **`tusimple.base_path`** to `TUSimple`. Repo defaults are `./data` and `TUSimple`.
 
 Splits used in this repo: `eigen_zhou`, `eigen_full`, `benchmark`, `odom`, `nyu` (see `Stage2/splits/` and `Stage2/options.py`).
 
@@ -102,16 +103,17 @@ The pipeline has two stages: **Stage1** trains the DINO+CLIP encoder with langua
 
 ### Stage1 (DINO + CLIP pretraining, PyTorch Lightning)
 
-Stage1 trains the DINO+CLIP encoder with language–depth alignment (no monocular depth regression). It uses PyTorch Lightning and a YAML config. The output is a `.ckpt` file that you pass to Stage2 as `--stage1_checkpoint_path`.
+Stage1 trains the DINO+CLIP encoder with language–depth alignment. It uses PyTorch Lightning and a YAML config; the output is a `.ckpt` file that you pass to Stage2 as `--stage1_checkpoint_path`.
+
+Use **`basicParams_dino_clip_nodepth.yaml`** for Stage1 (TuSimple, alignment only).
 
 ```bash
 python main.py -c params/basicParams_dino_clip_nodepth.yaml
 ```
 
-- Edit the config to set **`paths.data_dir`** (root for your dataset) and optionally **`paths.run_dir`** (where checkpoints and logs are saved). For KITTI/NYU, set **`basic.dataset`** (e.g. `kitti` or `nyu`) and ensure the dataset paths under `paths` / `kitti` / `nyu` in the YAML point to your data.
-- Checkpoints are saved under `paths.run_dir` (e.g. `./runs` or `/output`) in a subfolder named from the config; each run produces `.ckpt` files (e.g. `last.ckpt` or `epoch=19.ckpt`). Use one of these as the Stage1 pretrained checkpoint for Stage2.
-
-See `params/basicParams_dino_clip_nodepth.yaml` and other `params/*.yaml` for options (dataset, depth tokens, learning rate, etc.).
+- Set **`paths.data_dir`** to your data root and **`paths.run_dir`** where checkpoints/logs should go. TuSimple paths are under **`tusimple.base_path`** and (optionally) **`tusimple.filenames_file_train`** / **`filenames_file_eval`**.
+- Checkpoints are saved under `paths.run_dir` (e.g. `./output`) as `.ckpt` files (`last.ckpt`, `epoch=N.ckpt`). Use one as Stage1 pretrained for Stage2.
+- **Local runs:** Copy a config to `*_local.yaml` (e.g. `basicParams_dino_clip_local.yaml`), put your machine paths there, and run with `-c params/basicParams_dino_clip_local.yaml`. Files matching `*_local.yaml` are in `.gitignore` and are not committed.
 
 ### Stage2 (Monodepth2-style with DINO/CLIP)
 
@@ -193,9 +195,11 @@ Use the same Stage2 weights folder as in [Evaluation](#kitti-depth-stage2) (e.g.
 | `manydepth/` | ManyDepth multi-frame training & evaluation |
 | `main.py` | Stage1 training entry (PyTorch Lightning); use with a config from `params/`. |
 | `modules/` | Shared modules (e.g. DepthCLIP, MainRunnerLM) |
-| `params/` | YAML configs for Stage1 (`main.py`); e.g. `basicParams_dino_clip_nodepth.yaml`. |
+| `params/` | YAML configs for Stage1 (`main.py`); use `basicParams_dino_clip_nodepth.yaml`. Use `*_local.yaml` for local paths (gitignored). |
 | `datasets/` | Data loaders and split files |
 | `upload_stage1_ckpt_to_hf.py` | Upload Stage1 `.ckpt` to Hugging Face (`stage1_checkpoint/`). |
+| `upload_tusimple_to_hf.py` | Upload TuSimple folders to Hugging Face (`tusimple/`). |
+| `upload_tusimple_tar_to_hf.py` | Upload `process_32_order.tar.gz` to Hugging Face (`tusimple/process_32_order.tar.gz`). |
 | `Stage2/upload_weights_to_hf.py` | Upload Stage2 weights folder to Hugging Face (`checkpoints/`). |
 
 ---

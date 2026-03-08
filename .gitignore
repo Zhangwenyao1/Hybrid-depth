@@ -1,3 +1,7 @@
+# Local configs (do not commit; contain machine-specific paths)
+**/*_local.yaml
+params/*_local.yaml
+
 data/
 lightning_logs/
 TUSimple/

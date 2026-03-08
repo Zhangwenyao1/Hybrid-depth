@@ -22,20 +22,23 @@ class DepthDataLoader(object):
     def __init__(self, args, mode):
         self.args = args
 
-
-        train_json_file = "/data/zhangwenyao/drive_data/TUSimple/train_set/train_label_data.json"
-        train_images_root = "/data/zhangwenyao/drive_data/TUSimple/train_set/"
+        # TuSimple paths: from YAML (paths.data_dir + tusimple.base_path) or fallback
+        if getattr(args, "paths", None) and getattr(args, "tusimple", None):
+            _root = os.path.join(args.paths.data_dir, args.tusimple.base_path)
+        else:
+            _root = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "data", "TUSimple"))
+        train_images_root = os.path.join(_root, "train_set")
+        if not train_images_root.endswith(os.sep):
+            train_images_root += os.sep
+        train_json_file = os.path.join(_root, "train_set", "train_label_data.json")
+        val_json_file = os.path.join(_root, "test_set", "test_tasks_0627.json")
+        val_images_root = test_images_root = os.path.join(_root, "train_set")
         
         self.input_transforms = ['random_resized_crop', 'random_hflip', 'normalize']
         self.input_resize = [256, 256] 
         self.input_size = [224, 224]
         self.pixel_mean =  [0.485, 0.456, 0.406]
         self.pixel_std = [0.229, 0.224, 0.225]
-        
-    
-        # val_data_file = test_data_file = "/data/zhangwenyao/drive_data/TUSimple/process_32_order/test_data/data_list/test.txt"   
-        val_json_file = "/data/zhangwenyao/drive_data/TUSimple/test_set/test_tasks_0627.json"
-        val_images_root = test_images_root = "/data/zhangwenyao/drive_data/TUSimple/train_set"
 
     
         train_transforms, eval_transforms = get_transforms(self.input_transforms,self.input_resize,self.input_size,self.pixel_mean,self.pixel_std)
@@ -114,13 +117,21 @@ class LaneDepthMixDataLoader(object):
     def __init__(self, args, mode):
         self.args = args
 
-
-        train_json_file = "/data/zhangwenyao/drive_data/TUSimple/train_set/train_label_data.json"
-        train_images_root = "/data/zhangwenyao/drive_data/TUSimple/train_set/"
+        # TuSimple paths: from YAML (paths.data_dir + tusimple.base_path) or fallback to hardcoded
+        if getattr(args, "paths", None) and getattr(args, "tusimple", None):
+            _root = os.path.join(args.paths.data_dir, args.tusimple.base_path)
+        else:
+            _root = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "data", "TUSimple"))
+        train_images_root = os.path.join(_root, "train_set")
+        if not train_images_root.endswith(os.sep):
+            train_images_root += os.sep
+        train_json_file = os.path.join(_root, "train_set", "train_label_data.json")
 
         train_depth_file = 'datasets/split_filenames_files/zwy_kitti_eigen_train_files_with_gt.txt'
-        train_depth_images_root = '/data/zhangwenyao/drive_data/KITTI/raw/train'
-        train_pesudo_gt_root = '/data/ericliu/DepthAnythingV2L-KITTI/depthanything_kitti_eigen_train'
+        # KITTI mix (optional): set to your KITTI raw and pseudo-GT paths, or under ./data
+        _data_root = getattr(args.paths, "data_dir", "./data") if getattr(args, "paths", None) else "./data"
+        train_depth_images_root = os.path.join(_data_root, "KITTI", "raw", "train")
+        train_pesudo_gt_root = os.path.join(_data_root, "depthanything_kitti_eigen_train")
         
         self.input_transforms = ['color_jitter', 'normalize']
         # TODO: 能同时被14和32整除？
@@ -128,12 +139,9 @@ class LaneDepthMixDataLoader(object):
         self.pixel_mean =  [0.485, 0.456, 0.406]
         self.pixel_std = [0.229, 0.224, 0.225]
         
-    
-        # val_data_file = test_data_file = "/data/zhangwenyao/drive_data/TUSimple/process_32_order/test_data/data_list/test.txt"   
-        val_json_file = "/data/zhangwenyao/drive_data/TUSimple/test_set/test_tasks_0627.json"
-        val_images_root = test_images_root = "/data/zhangwenyao/drive_data/TUSimple/train_set"
+        val_json_file = os.path.join(_root, "test_set", "test_tasks_0627.json")
+        val_images_root = test_images_root = os.path.join(_root, "train_set")
 
-    
         train_transforms, eval_transforms = get_transforms_new(self.input_transforms,self.input_resize,self.pixel_mean,self.pixel_std, transform_target=False)
 
     
