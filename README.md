@@ -178,22 +178,6 @@ python test_simple.py \
 
 Use the same Stage2 weights folder as in [Evaluation](#kitti-depth-stage2) (e.g. the `checkpoints` folder from [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth)). Outputs are written to the same directory as the input image by default; set `--vis_dir` to specify an output folder.
 
----
-
-## Project structure (main parts)
-
-| Path | Description |
-|------|-------------|
-| `Stage2/` | Monodepth2-style training & evaluation (DINO/CLIP encoder, depth decoder). Entry: `train.py`, `evaluate_depth.py`, `test_simple.py`. |
-| `manydepth/` | ManyDepth multi-frame training & evaluation |
-| `main.py` | Stage1 training entry (PyTorch Lightning); use with a config from `params/`. |
-| `modules/` | Shared modules (e.g. DepthCLIP, MainRunnerLM) |
-| `params/` | YAML configs for Stage1 (`main.py`); use `basicParams_dino_clip_nodepth.yaml`. Use `*_local.yaml` for local paths (gitignored). |
-| `datasets/` | Data loaders and split files |
-| `upload_stage1_ckpt_to_hf.py` | Upload Stage1 `.ckpt` to Hugging Face (`stage1_checkpoint/`). |
-| `upload_tusimple_to_hf.py` | Upload TuSimple folders to Hugging Face (`tusimple/`). |
-| `upload_tusimple_tar_to_hf.py` | Upload `process_32_order.tar.gz` to Hugging Face (`tusimple/process_32_order.tar.gz`). |
-| `Stage2/upload_weights_to_hf.py` | Upload Stage2 weights folder to Hugging Face (`checkpoints/`). |
 
 ---
 
