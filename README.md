@@ -21,6 +21,9 @@
   <a href="https://github.com/Zhangwenyao1/Hybrid-depth">
     <img src="https://img.shields.io/badge/Code-GitHub-blue.svg" alt="Code">
   </a>
+  <a href="https://huggingface.co/WenyaoZhang/Hybrid-depth/tree/main">
+    <img src="https://img.shields.io/badge/🤗-Weights-yellow.svg" alt="Weights">
+  </a>
 </div>
 
 </div>
@@ -58,7 +61,7 @@ pip install -r requirements.txt  # if present, or install as needed
 ## Datasets
 
 - **KITTI**: Prepare the raw dataset as in [Monodepth2](https://github.com/nianticlabs/monodepth2). Set `--data_path` to your KITTI raw root (e.g. `.../kitti_dataset_copy/raw`).
-- **NYU Depth v2**: Set `--dataset nyu` and point `--data_path` to your NYU path.
+
 
 Splits used in this repo: `eigen_zhou`, `eigen_full`, `benchmark`, `odom`, `nyu` (see `Stage2/splits/` and `Stage2/options.py`).
 
@@ -97,15 +100,27 @@ python train.py \
 
 ### KITTI depth (Stage2)
 
+**Recommended setup (best config from the paper)**: use the following arguments with your downloaded or trained weights:
+
 ```bash
 cd Stage2
 python evaluate_depth.py \
+  --cat_depth_text_logic \
   --load_weights_folder /path/to/weights \
-  --eval_split eigen \
-  --eval_mono
+  --eval_mono \
+  --use_depth_text_align \
+  --n_depth_text_tokens 256
 ```
 
-For full benchmark evaluation, use `--eval_split benchmark` and the corresponding split files.
+**Checkpoint for paper results**: Weights that reproduce the results in the paper are available at [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth/tree/main). Download the checkpoint folder and set `--load_weights_folder` to its path.
+
+**`--eval_split`** selects which test set to use. Add it to the command above (default is `eigen` if omitted):
+
+| `--eval_split`    | Test set size | For models trained with...        | Description |
+|-------------------|---------------|------------------------------------|-------------|
+| `eigen`           | 697           | `--split eigen_zhou` or `eigen_full` | Standard Eigen test files. |
+| `eigen_benchmark` | 652           | `--split eigen_zhou` or `eigen_full` | Improved ground truth from the [new KITTI depth benchmark](http://www.cvlibs.net/datasets/kitti/eval_depth.php). |
+| `benchmark`       | 500           | `--split benchmark`               | New KITTI depth benchmark test files. |
 
 ### Single-image inference (Stage2)
 
