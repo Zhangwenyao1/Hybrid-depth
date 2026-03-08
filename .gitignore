@@ -2,6 +2,11 @@
 **/*_local.yaml
 params/*_local.yaml
 
+# Stage1: only track the paper config; ignore other params
+params/*.yaml
+!params/basicParams_freeze_dino_clip_nodepth.yaml
+params/.ipynb_checkpoints/
+
 data/
 lightning_logs/
 TUSimple/

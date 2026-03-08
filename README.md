@@ -98,15 +98,15 @@ The pipeline has two stages: **Stage1** trains the DINO+CLIP encoder with langua
 
 Stage1 trains the DINO+CLIP encoder with language–depth alignment. It uses PyTorch Lightning and a YAML config; the output is a `.ckpt` file that you pass to Stage2 as `--stage1_checkpoint_path`.
 
-Use **`basicParams_dino_clip_nodepth.yaml`** for Stage1 (TuSimple, alignment only).
+Use **`params/basicParams_freeze_dino_clip_nodepth.yaml`** for Stage1 (TuSimple, alignment only).
 
 ```bash
-python main.py -c params/basicParams_dino_clip_nodepth.yaml
+python main.py -c params/basicParams_freeze_dino_clip_nodepth.yaml
 ```
 
 - Set **`paths.data_dir`** to your data root and **`paths.run_dir`** where checkpoints/logs should go. TuSimple paths are under **`tusimple.base_path`** and (optionally) **`tusimple.filenames_file_train`** / **`filenames_file_eval`**.
 - Checkpoints are saved under `paths.run_dir` (e.g. `./output`) as `.ckpt` files (`last.ckpt`, `epoch=N.ckpt`). Use one as Stage1 pretrained for Stage2.
-- **Local runs:** Copy a config to `*_local.yaml` (e.g. `basicParams_dino_clip_local.yaml`), put your machine paths there, and run with `-c params/basicParams_dino_clip_local.yaml`. Files matching `*_local.yaml` are in `.gitignore` and are not committed.
+- **Local runs:** Copy the config to `params/basicParams_freeze_dino_clip_nodepth_local.yaml`, put your machine paths there, and run with `-c params/basicParams_freeze_dino_clip_nodepth_local.yaml`. Files matching `*_local.yaml` are in `.gitignore` and are not committed.
 
 ### Stage2 (Monodepth2-style with DINO/CLIP)
 
