@@ -27,7 +27,6 @@ from options import MonodepthOptions
 
 
 options = MonodepthOptions()
-opts = options.parse()
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -36,17 +35,7 @@ def parse_args():
     parser.add_argument('--image_path', type=str,
                         help='path to a test image or folder of images', required=True)
     parser.add_argument('--model_name', type=str,
-                        help='name of a pretrained model to use',
-                        choices=[
-                            "mono_640x192",
-                            "stereo_640x192",
-                            "mono+stereo_640x192",
-                            "mono_no_pt_640x192",
-                            "stereo_no_pt_640x192",
-                            "mono+stereo_no_pt_640x192",
-                            "mono_1024x320",
-                            "stereo_1024x320",
-                            "mono+stereo_1024x320"])
+                        help='path to model folder (containing encoder.pth, depth.pth)', required=True)
     parser.add_argument('--ext', type=str,
                         help='image extension to search for in folder', default="jpg")
     parser.add_argument("--no_cuda",
@@ -57,7 +46,7 @@ def parse_args():
                              'makes sense for stereo-trained KITTI models).',
                         action='store_true')
 
-    return parser.parse_args()
+    return parser.parse_known_args()
 
 
 def test_simple(args):
@@ -154,8 +143,8 @@ def test_simple(args):
 
             # PREDICTION
             input_image = input_image.to(device)
-            features = encoder(input_image)
-            outputs = depth_decoder(features)
+            _, features, depth, _ = encoder(input_image, pose=False)
+            outputs = depth_decoder(features, depth)
 
             disp = outputs[("disp", 0)]
             disp_resized = torch.nn.functional.interpolate(
@@ -192,5 +181,7 @@ def test_simple(args):
 
 
 if __name__ == '__main__':
-    args = parse_args()
+    args, unknown = parse_args()
+    sys.argv = [sys.argv[0]] + unknown
+    opts = options.parse()
     test_simple(args)

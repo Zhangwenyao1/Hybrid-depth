@@ -114,20 +114,33 @@ python evaluate_depth.py \
 
 **Checkpoint for paper results**: Weights that reproduce the results in the paper are available at [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth/tree/main). Download the checkpoint folder and set `--load_weights_folder` to its path.
 
-**`--eval_split`** selects which test set to use. Add it to the command above (default is `eigen` if omitted):
+**`--eval_split`** selects which test set to use. Default is **`eigen`** if omitted. Common options:
+- **`eigen`** (default) — standard Eigen test set.
+- **`eigen_improved`** — alternative test set with improved ground truth.
+
+Add e.g. `--eval_split eigen_improved` to the command above to use a different test set. Full list:
 
 | `--eval_split`    | Test set size | For models trained with...        | Description |
 |-------------------|---------------|------------------------------------|-------------|
-| `eigen`           | 697           | `--split eigen_zhou` or `eigen_full` | Standard Eigen test files. |
-| `eigen_benchmark` | 652           | `--split eigen_zhou` or `eigen_full` | Improved ground truth from the [new KITTI depth benchmark](http://www.cvlibs.net/datasets/kitti/eval_depth.php). |
-| `benchmark`       | 500           | `--split benchmark`               | New KITTI depth benchmark test files. |
+| `eigen`           | 697           | `--split eigen_zhou` or `eigen_full` | Standard Eigen test files (**default**). |
+| `eigen_improved` | 652           | `--split eigen_zhou` or `eigen_full` | Improved ground truth from the [new KITTI depth benchmark](http://www.cvlibs.net/datasets/kitti/eval_depth.php). |
 
-### Single-image inference (Stage2)
+
+### Single-image inference and visualization (Stage2)
+
+Run depth prediction on a single image and save a colormapped depth visualization (e.g. `*_disp.jpeg`) and disparity/depth npy:
 
 ```bash
 cd Stage2
-python test_simple.py --image_path /path/to/image --model_path /path/to/weights
+python test_simple.py \
+  --image_path /path/to/image.png \
+  --model_name /path/to/weights \
+  --cat_depth_text_logic \
+  --use_depth_text_align \
+  --n_depth_text_tokens 256
 ```
+
+Use the same checkpoint as in [Evaluation](#evaluation) (e.g. from [Hugging Face](https://huggingface.co/WenyaoZhang/Hybrid-depth/tree/main)). Outputs are written to the same directory as the input image by default, or set `--vis_dir` to specify an output folder.
 
 ---
 
