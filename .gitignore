@@ -25,3 +25,4 @@ wandb/
 *.pdf
 *.docx
 *.doc
+process_32_order.tar.gz
