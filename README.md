@@ -64,11 +64,7 @@ All pretrained weights can live under the repo root’s **`checkpoints/`** folde
 
 **DINOv2**  
 Download `dinov2_vitb14_pretrain.pth` and place it in `checkpoints/`.
-
-- Official: <https://dl.fbaipublicfiles.com/dinov2/dinov2_vitb14/dinov2_vitb14_pretrain.pth>
 - Hugging Face: <https://huggingface.co/facebook/dinov2-base/tree/main> (download `dinov2_vitb14_pretrain.pth`)
-
-You can also set the path via the `DINOV2_PRETRAIN_PATH` environment variable.
 
 **CLIP**  
 The code uses CLIP **RN50**. Place `RN50.pt` in `checkpoints/` (or it will be downloaded there on first run).
